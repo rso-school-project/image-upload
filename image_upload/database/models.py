@@ -3,9 +3,10 @@ from sqlalchemy import Column, Integer, String
 from image_upload.database import Base
 
 
-class Images(Base):
+class Image(Base):
     __tablename__ = 'images'
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer)
-    bucket_link = Column(String)
+    file_hash = Column(String)
+    file_name = Column(String)

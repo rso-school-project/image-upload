@@ -3,15 +3,16 @@ from pydantic import BaseModel
 
 class ImageBase(BaseModel):
     user_id: int
-    bucket_link: str
 
 
 class ImageCreate(ImageBase):
-    pass
+    file: dict
 
 
 class Image(ImageBase):
     id: int
+    file_hash: str
+    file_name: str
 
     class Config:
         orm_mode = True
