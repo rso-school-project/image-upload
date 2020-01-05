@@ -13,6 +13,7 @@ class Image(ImageBase):
     id: int
     file_hash: str
     file_name: str
+    tags: str
 
     class Config:
         orm_mode = True

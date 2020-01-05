@@ -3,6 +3,7 @@ from PIL import Image
 import hashlib
 import numbers
 
+from google.cloud import pubsub_v1
 
 from typing import List
 from fastapi import APIRouter, Depends, UploadFile, File, Form, HTTPException
@@ -28,6 +29,33 @@ router = APIRouter()
 storage_client = storage.Client()
 bucket_name = "super_skrivni_bozickov_zaklad"
 bucket = storage_client.bucket(bucket_name)
+
+# Pub/sub.
+publisher = pubsub_v1.PublisherClient()
+subscriber = pubsub_v1.SubscriberClient()
+
+topic_name = 'projects/{project_id}/topics/{topic}'.format(
+    project_id='forward-leaf-258910',
+    topic='image_to_process',
+)
+subscription_name = 'projects/{project_id}/subscriptions/{sub}'.format(
+    project_id='forward-leaf-258910',
+    sub='image-upload',
+)
+
+
+def callback(message):
+    print(message)
+
+    tags = message.attributes["image_tags"]
+    image_id = message.attributes["image_id"]
+
+    crud.update_tags(db=next(get_db()), image_id=int(image_id), tags=tags)
+
+    message.ack()
+
+future = subscriber.subscribe(subscription_name, callback)
+
 
 
 
@@ -56,6 +84,11 @@ def upload(*, user_id: int = Form(...), file: UploadFile = File(...), db: Sessio
     except:
         crud.delete_image(db=db, image_id=iid)
         raise HTTPException(status_code=400, detail='Upload to gCloud failed.')
+
+    # Send to image processor.
+    url_r = str(iid) + file_hash
+    url_l = "https://storage.googleapis.com/super_skrivni_bozickov_zaklad/"
+    publisher.publish(topic_name, b'', image_id=str(iid), image_url=url_l + url_r)
 
     return new_image
 

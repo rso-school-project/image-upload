@@ -10,3 +10,4 @@ class Image(Base):
     user_id = Column(Integer)
     file_hash = Column(String)
     file_name = Column(String)
+    tags = Column(String)
